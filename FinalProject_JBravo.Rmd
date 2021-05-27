@@ -1,0 +1,300 @@
+---
+title: "The Hydrogen Atom"
+author: "J. Bravo"
+date: "December 13, 2020"
+output: html_document
+---
+
+## Introduction
+
+I want to tell a story of how to the hydrogen atom, and how to model the Hydrogen atom using a quantum mechanical model. When trying to study phenonem at this microscopic level, we use quantum mechanics to determine a particle's wave function,
+
+$$
+\Psi(x,t),
+$$
+
+which is a function of both position and time. The wave function is determined via Schrodinger Equation:
+
+$$
+-\frac{\hbar^2}{2m} \frac{\partial^2}{\partial x^2} \Psi(x,t) + V(x)\Psi(x,t) = i\hbar \frac{\partial}{\partial t} \Psi(x,t),
+$$
+
+for (reduced) Planck's constant $\hbar$, particle of mass $m$, imaginary number $i = \sqrt{-1}$, potential energy $V(x)$, and, of course the wave function $\psi(x,t)$.
+
+-Schrodinger Equation the fundamental postulate in Quantum Mechanics.
+
+- The wave function gives us information about the system of interest. Gives us the proability of events or outcomes.
+
+-The Schrodinger Equation then reveals the wave function (through calculations, of course) of any small particle, and energy $E$ for an atomic system such as the interaction between a single proton and electron.
+
+## Quantum Mechanics in Three Dimensions
+
+When first studying quantum mechanics, we usually begin by studying one dimensional situations such as a one dimensional box, or harmonic oscillator, but the Hydrogen atom offers us an opportunity to study a real physical situation in three dimensions. First, we are only interested in the time-independent S.E. in three dimensions which will require the use of the Laplacian,
+$$
+\Delta^2 \equiv \frac{\partial^2}{\partial x^2} + \frac{\partial^2}{\partial y^2} + \frac{\partial^2}{\partial z^2}.
+$$
+
+So now our time-independent S.E. becomes
+$$
+-\frac{\hbar^2}{2m} \Delta^2 \psi + V \psi = E \psi.
+$$
+
+But for the hydrogen model, we will take advantage of the spherical symmetry involved in the interaction between a proton and electron. Instead of cartesian coordinates $x, y, z$, it seems more natural to use polar spherical coordinates which has a radial $r$ coordinate, azimuth (elevation) $\theta$ angle coordinate, and zenith $\phi$ angle coordinate which describe positions on a sphere. so our time-independent S.E. becomes:
+$$
+\psi(x,y,z) = \psi(r, \theta, \phi).
+$$
+
+## Separation of variables
+
+having chosen a coordinate set, we progress by updating our time-independent S.E. to,
+$$
+-\frac{\hbar}{2m} \left[\frac{1}{r^2} \frac{\partial}{\partial r} \left( r^2 \frac{\partial \psi}{\partial r} \right) + \frac{1}{r^2 \sin \theta} \frac{\partial}{\partial \theta} \left( \sin \theta \frac{\partial \psi}{\partial \theta} \right) + \frac{1}{r^2 \sin^2 \theta} \left( \frac{\partial^2 \psi}{\partial \phi^2} \right)\right]+ V\psi = E \psi
+$$
+
+We can use a common technique known as separation of variables to solve this partial differential equation such that
+$$
+\psi( r, \theta, \phi) = R(r)Y(\theta, \phi).
+$$
+
+So now the wave function is a product of spherical harmonic (angular) function $Y(\theta, \phi)$ and radial (distance) functions $R(r)$.
+
+## Angular Component
+
+First, want to analyze the angular equation $Y(\theta, \phi)$. We can further separate the variables here to:
+$$
+Y(\theta, \phi) = \Theta (\theta) \Phi (\phi).
+$$
+
+For the $\Theta(\theta)$ component, the solution is
+$$
+\Theta(\theta) = A P_m^l \cdot \cos \theta,
+$$
+
+Where $A$ is some constant , and histortically, $l$ is known as the azimuthal quantum number, and $m$ is the magnetic quantum number. The associated Legendre function is:
+
+$$
+P_l^m(x) \equiv \left( 1 - x^2 \right)^{\frac{|m|}{2}} \left( \frac{d}{dx} \right)^{|m|} P_l (x),
+$$
+
+and $P_l$ is the Legendre polynomial. I will now use the `legendre.polynomials` function from the `orthopolynom` to plot the some Legendre polynomials.
+
+Here is an example of how this package works:
+```{r}
+orthopolynom::legendre.polynomials(5)
+```
+
+Now to calculate the first five polynomials. Will use `seq` to generate some data points for the model that is Legendre polynomials.
+```{r}
+set.seed(250)
+
+x <- seq( from = -1, to = 1, by = 0.02 )
+
+firstDegree <- orthopolynom::legendre.polynomials(1)
+secondDegree <- orthopolynom::legendre.polynomials(2)
+thirdDegree <- orthopolynom::legendre.polynomials(3) 
+fourthDegree <- orthopolynom::legendre.polynomials(4)
+fifthDegree <- orthopolynom::legendre.polynomials(5)
+
+## Will use the 'as.function' to convert my legendre polynomials into something more usable
+P0 <- as.function( firstDegree[[2]] )
+P1 <- as.function( secondDegree[[3]] )
+P2 <- as.function( thirdDegree[[4]] )
+P3 <- as.function( fourthDegree[[5]] )
+P4 <- as.function( fifthDegree[[6]] )
+
+plot( x, P0(x), type = 'l', main="Legendre Polynomials", xlab='x (arbitrary units)', ylab='P(x)',col = 'aquamarine' )
+lines( x, P1(x), type ='l', col = 'orange' )
+lines( x, P2(x), col ='red' )
+lines(x, P3(x), col = "azure4" )
+lines( x, P4(x), col = 'blue' )
+text(1, 0, "P4(x)", cex=0.55)
+text(0.6, -0.6, "P3(x)", cex=0.55)
+text(-0.5, 0.5, "P2(x)", cex=0.55)
+text(0.75, 0.85, "P0(x)", cex=0.55)
+text(0, -0.4, "P1(x)", cex=0.55)
+```
+
+These polynomials are the solutions to the angular componenet of our wave function.
+
+## Hydrogenlike Atoms
+
+Now, want to model the hyrogen atome as a heavy practically motionless proton with lighter electron that orbits around it. This two-body interaction abides by Coulomb's law in the form of potential energy:
+$$
+V(r) = -\frac{e^2}{4\pi \epsilon_0}\frac{1}{r},
+$$
+where $\epsilon_0$ is the permittivity constant, and fundamental charge $e$.
+
+These solutions give us a base to build to more complex atoms and molecules. Assume $+Ze$ to be the charge of the field that an electron orbits. So our time-independent S.E. becomes:
+$$
+\left( -\frac{\hbar}{2m} \Delta^2 - \frac{Ze^2}{r} \right) \psi(r) = E \cdot \psi(r)
+$$
+For calculations will use:
+$$
+a_0 = \frac{\hbar^2}{me^2} = 5.29 \times 10^{-11}\text{m} \equiv 1 \text{bohr}.
+$$
+To simply calculations, will also use atomic units (a.u.) :
+$$
+\hbar = e = m = 1.
+$$
+
+## Radial Wave Functions for Hydrogen
+
+Want the functions that decribe the wave function as a mathematical function of distance from the center of the hydrogen atom, i.e., the assumed stationary proton, and will use `r` for radius. They will take the form $R_{nl}$ where $n$ is the principal quantum number.
+
+```{r}
+set.seed(500)
+# The radius from the assumed stationary proton.
+r <- seq( 0, 15, by = 0.10 )
+##r <- rnorm( r_0 )
+
+#a = 1 # Will use atomic units and set equal to 1 bohr.
+a = 0.529 #This is bohr number in angstroms
+
+r_10 <- function( r )
+{
+  2*(a^(-3/2))*exp(-r/(2*a))
+}
+
+r_20 <- function( r )
+{
+  ( 1/sqrt(2) )*a^(-3/2)*( 1-(1/2)*(r/a) )*exp( -r/(2*a) )
+}
+
+r_21 <- function( r )
+{
+  ( 1/sqrt(24) )*a^(-3/2)*( r/a )*exp( -r/(2*a) )
+}
+
+r_30 <- function( r )
+{
+  ( 2/sqrt(27) )*a^(-3/2)*( 1-(2/3)*(r/a)+(2/27)*(r/a^2) )*exp( -r/(3*a) )
+}
+
+r_31 <- function( r )
+{
+  ( 8/(27*sqrt(6)) )*a^(-3/2)*( 1-(1/6)*(r/a) )*(r/a)*exp(-r/(3*a))
+}
+
+r_40 <- function(r)
+{
+  (1/4)*a^(-3/2)*( 1-(3/2)*(r/a)+(1/8)*(r/a)^2-(1/192)*(r/a)^3 )*exp(-r/(4*a))
+}
+
+r_41 <- function( r )
+{
+  (sqrt(5)/(16*sqrt(3)))*a^(-3/2)*( 1-(1/4)*(r/a)+(1/80)*(r/a)^2 )*(r/a)*exp(-r/(4*a))
+}
+
+plot( r, r_10(r), main="Hydrogen Radial Wave Functions", xlab="r (a.u.)", ylab= "R(r)",type = 'l', ylim = c( -0.450, 1.0 ), col = 'blue' )
+lines( r, r_20(r), col='aquamarine' )
+lines( r, r_21(r), col = 'orange' )
+lines( r, r_30(r), col = 'pink' )
+lines( r, r_31(r) )
+lines( r, r_40(r), col = "red" )
+lines( r, r_41(r), col = 'green' )
+text(3, 0.75, "1s", cex=0.55)
+text(0, -0.4, "P1(x)", cex=0.55)
+```
+
+The plot describes how the various functions behave as the distance from the proton, $r$, increases. They also represent the amplitude of the different wave funtions. Also, whenever a function changes sign, i.e., goes form positive to negative or vice versa, then that is a radial node. A radial node is the radius at which the probability of finding the electron is zero.
+
+The plot also represents the behavior of different atomic orbitals. Orbitals are space around the atomic nucleus that represents probability of finding an electron, an idea from quantum mechanics. These orbitals exists in three-dimesional space with various shapes. In the plot above, for example, the 1s orbital is the simplest orbital and is a simple sphere. This orbital canhold up to tow electrons. 
+
+## Radial Distribution Functions
+
+The maximum of radial distribution functions,
+$$
+P_r(r) = 4\pi r^2 \left| R_{n\ell} (r) \right|^2
+$$
+
+represents the distance from the nucleus at where the electron has highest probability of being found. This is also the ideal size of a sphere of finding it in the 1s, or 2s orbitals.Starting at the nucleus (origin in the plots), this shows different probabilities on surface of increasing, larger shells.
+
+```{r}
+# Radial distribution function will be abbreviated rdf
+# For the r_10 radial equation
+rdf <- function( r )
+{
+  4*pi*(r^2)*(a^(-3))*exp(-(2*r)/a)
+}
+
+# r_2s orbital
+rdf_2 <- function (r)
+{
+  4*pi*(r^2)*((1/ (8*pi*a^3))*( 1 - (r/(2*a)))^2*exp(-2*r/(2*a)))
+}
+
+plot( r, rdf(r), main="Radial Distribution Functions", xlab="Radius (a.u.)", ylab= "Electron Probability P(r)",type = 'l', col ='cadetblue' )
+lines(r, rdf_2(r), type = 'l', col = 'purple')
+text(1, 2.8, "1s", cex=0.55)
+text(5, 0.5, "2s", cex=0.55)
+```
+
+The 1s situation is the simplest scenario. Will now use the `optimize` function to see where the most likely distance from the a proton I would find a single electron.
+```{r}
+optimize( rdf, interval = c( 0, 18 ), maximum = TRUE )
+```
+
+The model predicts at maximum at 0.529 which agrees with the 0.529 angstrom that is the [Bohr radius](https://en.wikipedia.org/wiki/Bohr_radius). 
+
+```{r}
+optimize( rdf_2, interval = c( 0, 18 ), maximum = TRUE )
+```
+
+The 2s orbital will start to fill once the 1s orbital is full. According to the model, we would find the third electron in our model som 2.77 angstrom from the nucleus (proton).  The 2s orbial, though has two global maxima.
+
+## d orbital
+
+The 3d atomic orbitals are complex functions, containing the spherical harmonics
+$$
+Y_2^{\pm 1}, Y_2^{\pm 2}.
+$$
+
+Decided to plot the $d_{x^2 - y^2}$ [orbitals](https://en.wikipedia.org/wiki/Atomic_orbital)
+.
+
+I used the following wave funtion as the model:
+$$
+\psi_{nlm} = \psi_{32\pm 1} = \frac{1}{81\sqrt{\pi}} \left( \frac{1}{a_0} \right)^{\frac{3}{2}} \left( \frac{r}{a_0} \right)^2 e^{-\frac{r}{3a_0}}.
+$$
+
+```{r}
+library(plot3D)
+x_1 <- y_1 <- seq( -1.25*pi, 1.25*pi, 0.05 )
+
+a_0 = 1
+
+z = matrix(data=NA, nrow=length(x_1), ncol=length(x_1))
+z1 = matrix(data=NA, nrow=length(x_1), ncol=length(x_1))
+z2 = matrix(data=NA, nrow=length(x_1), ncol=length(x_1))
+
+for(i in 1:length(x_1))
+{
+  for(j in 1:length(y_1))
+  {
+    z1[i,j] = (1/(81*sqrt(pi)))*(x_1[i]^2 - y_1[j]^2)*exp(-(x_1[i]^2+y_1[j]^2)/3)
+    z2[i,j] = (1/(81*sqrt(pi)))*(x_1[i]^2 - y_1[j]^2)*exp(-(x_1[i]^2+y_1[j]^2)/3)
+    z[i,j] = z1[i,j] + z2[i,j]
+  }
+}
+
+
+contour2D(z,x_1,y_1, main="d(x^2 - y^2) Orbital", xlab="x", ylab="y")
+```
+
+This contour density plot provides a much better representation of the physical shape of the d orbitals in this case. The plot has the distinct geometric design that is the "four-leaf clover". The 3d orbital has subshells that can hold up to ten electrons. According to the contour plot, the darker red and blue regions indicate higher probabilities of finding an electron in that region.
+
+## Conclusion
+
+R programming language provides a multitude of tools to help model such complex ideas such as quantum mechanics. Whether it be packages developed by other programmers, or simply creating an R script from some mathematical model, R has tools to effectively communicate statistics.
+
+
+
+
+
+
+
+
+
+
+
+
